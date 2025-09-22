@@ -1,174 +1,63 @@
-import React, { useState, useEffect, useRef } from "react";
+// src/TodoApp.jsx
+import React, { useState } from "react";
 
 export default function Todo() {
-  const [todos, setTodos] = useState(() => {
-    try {
-      const raw = localStorage.getItem("todos_v1");
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [task, setTask] = useState("");
+  const [todos, setTodos] = useState([]);
 
-  const [newText, setNewText] = useState("");
-  const [filter, setFilter] = useState("all"); // all | active | completed
-  const [editingId, setEditingId] = useState(null);
-  const [editingText, setEditingText] = useState("");
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    localStorage.setItem("todos_v1", JSON.stringify(todos));
-  }, [todos]);
-
-  // simple unique id
-  const uid = () =>
-    Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-
-  function addTodo() {
-    const text = newText.trim();
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const text = task.trim();
     if (!text) return;
-    setTodos((t) => [
-      ...t,
-      { id: uid(), text, completed: false, createdAt: Date.now() },
+    setTodos((prev) => [
+      ...prev,
+      { id: Date.now() + Math.random(), text, completed: false },
     ]);
-    setNewText("");
-    inputRef.current?.focus();
-  }
+    setTask("");
+  };
 
-  function removeTodo(id) {
-    setTodos((t) => t.filter((x) => x.id !== id));
-  }
-
-  function toggleTodo(id) {
-    setTodos((t) =>
-      t.map((x) => (x.id === id ? { ...x, completed: !x.completed } : x))
+  const toggleTodo = (id) =>
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     );
-  }
 
-  function startEdit(id) {
-    const item = todos.find((x) => x.id === id);
-    if (!item) return;
-    setEditingId(id);
-    setEditingText(item.text);
-  }
-
-  function commitEdit() {
-    const text = editingText.trim();
-    if (!text) {
-      removeTodo(editingId);
-    } else {
-      setTodos((t) =>
-        t.map((x) => (x.id === editingId ? { ...x, text } : x))
-      );
-    }
-    setEditingId(null);
-    setEditingText("");
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setEditingText("");
-  }
-
-  function clearCompleted() {
-    setTodos((t) => t.filter((x) => !x.completed));
-  }
-
-  const visible = todos.filter((x) => {
-    if (filter === "active") return !x.completed;
-    if (filter === "completed") return x.completed;
-    return true;
-  });
+  const deleteTodo = (id) => setTodos((prev) => prev.filter((t) => t.id !== id));
 
   return (
     <div>
       <h2>Todo List</h2>
 
-      {/* add new */}
-      <div>
+      <form onSubmit={handleSubmit}>
         <input
-          ref={inputRef}
-          value={newText}
-          placeholder="Add a todo and press Enter"
-          onChange={(e) => setNewText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") addTodo();
-          }}
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+          placeholder="Enter a task"
+          aria-label="task-input"
         />
-        <button onClick={addTodo}>Add</button>
-      </div>
+        <button type="submit">Add</button>
+      </form>
 
-      {/* filters */}
-      <div>
-        <span>Show: </span>
-        <button onClick={() => setFilter("all")} disabled={filter === "all"}>
-          All
-        </button>
-        <button
-          onClick={() => setFilter("active")}
-          disabled={filter === "active"}
-        >
-          Active
-        </button>
-        <button
-          onClick={() => setFilter("completed")}
-          disabled={filter === "completed"}
-        >
-          Completed
-        </button>
-      </div>
-
-      {/* bulk actions */}
-      <div>
-        <span>{todos.filter((t) => !t.completed).length} items left</span>
-        <button onClick={clearCompleted}>Clear completed</button>
-      </div>
-
-      {/* list */}
-      <ul>
-        {visible.length === 0 && <li>No todos</li>}
-
-        {visible.map((todo) => (
-          <li key={todo.id}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => toggleTodo(todo.id)}
-            />
-
-            {/* editing inline */}
-            {editingId === todo.id ? (
-              <span>
-                <input
-                  value={editingText}
-                  onChange={(e) => setEditingText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") commitEdit();
-                    if (e.key === "Escape") cancelEdit();
-                  }}
-                  autoFocus
-                />
-                <button onClick={commitEdit}>Save</button>
-                <button onClick={cancelEdit}>Cancel</button>
+      {todos.length === 0 ? (
+        <p>No todos yet — add one above.</p>
+      ) : (
+        <ul>
+          {todos.map((todo) => (
+            <li key={todo.id}>
+              <span
+                onClick={() => toggleTodo(todo.id)}
+                style={{
+                  textDecoration: todo.completed ? "line-through" : "none",
+                  cursor: "pointer",
+                }}
+              >
+                {todo.text}
               </span>
-            ) : (
-              <span>
-                <span>{todo.text}</span>
-                <button onClick={() => startEdit(todo.id)}>Edit</button>
-                <button onClick={() => removeTodo(todo.id)}>Delete</button>
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      {/* instructions */}
-      <div>
-        <small>
-          Use Enter to add. In edit mode, Enter saves and Esc cancels. Data is
-          saved in localStorage.
-        </small>
-      </div>
+              {" "}
+              <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

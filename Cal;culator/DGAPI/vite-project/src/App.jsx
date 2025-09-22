@@ -1,14 +1,6 @@
-import { useState } from 'react'
-import './App.css'
+import React from "react";
+import TodoApp from "./Todo";
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <Todo/>
-    </>
-  )
+export default function App() {
+  return <Todo/>;
 }
-
-export default App
