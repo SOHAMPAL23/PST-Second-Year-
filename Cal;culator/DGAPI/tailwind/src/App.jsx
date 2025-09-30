@@ -20,7 +20,7 @@ function App() {
       </h1>
       <button
         onClick={changeColor}
-        className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700"
+        className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 aligning-center"
       >
         Change Color
       </button>
